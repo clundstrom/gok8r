@@ -1,0 +1,12 @@
+.wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  height: 100%;
+  background-color: cadetblue;
+
+  mat-spinner {
+    margin: 20px;
+  }
+}
