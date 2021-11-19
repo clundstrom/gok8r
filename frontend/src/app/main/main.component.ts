@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
-import {HttpClient} from "@angular/common/http";
+import {Component, OnInit} from '@angular/core';
 import {MatSnackBar} from "@angular/material/snack-bar";
+import {ApiService} from "../services/api.service";
 
 @Component({
   selector: 'app-main',
@@ -9,7 +9,8 @@ import {MatSnackBar} from "@angular/material/snack-bar";
 })
 export class MainComponent implements OnInit {
 
-  constructor(private http: HttpClient, private snackBar: MatSnackBar) { }
+  constructor(private api: ApiService, private snackBar: MatSnackBar) {
+  }
 
   ngOnInit(): void {
   }
@@ -17,7 +18,12 @@ export class MainComponent implements OnInit {
   spinner = false;
 
   btnTrigger() {
-    this.snackBar.open('Task triggered.')._dismissAfter(3000);
     this.spinner = true;
+    this.api.getTaskResult().subscribe((res) => {
+      if (res) {
+        this.snackBar.open('Task triggered on host: ' + res)._dismissAfter(3000)
+      }
+    });
+
   }
 }

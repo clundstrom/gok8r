@@ -21,7 +21,7 @@ func GetOutboundIP() net.IP {
 }
 
 func testRoute(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hey, you hit host: %s", GetOutboundIP())
+	fmt.Fprintf(w, "%s", GetOutboundIP())
 }
 
 func main() {

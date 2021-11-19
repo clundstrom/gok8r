@@ -12,11 +12,14 @@ To get started, build the images using the build script, and run `'helm install 
 
 ## Running containers outside of cluster
 
-```./build.sh run api frontend```
+```./build.sh -r api frontend```
 
 
 
-## Example - Load balancing between two pods in a node.
+## Example 1 - Load balancing between two pods in a node
+
+Frontend  
+<img src="images/task_on_host.png">
 
 Replica 1  
 <img src="images/replica1.jpg">   
