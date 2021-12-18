@@ -1,4 +1,4 @@
-FROM rabbitmq:3.9.9-alpine as broker
+FROM rabbitmq:3.9.11-management-alpine as broker
 
 EXPOSE 5672
 

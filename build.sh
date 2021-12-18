@@ -5,8 +5,8 @@ api(){
     docker build ./api -t api
 
     if [[ $1 == '-r' ]]; then
-    echo "Starting api in detached mode.."
-    docker run --name api -d -t -p "8000:8000" api 
+      echo "Starting api in detached mode.."
+      docker run --name api -d -t -p "8000:8000" api
     fi
 }
 
@@ -15,18 +15,18 @@ frontend(){
     docker build ./frontend -t frontend
 
     if [[ $1 == '-r' ]]; then
-    echo "Starting frontend in detached mode.."
-    docker run --name frontend -d -t -p "80:80" frontend
+      echo "Starting frontend in detached mode.."
+      docker run --name frontend -d -t -p "80:80" frontend
     fi
 }
 
 broker(){
     echo "Building event broker"
-    docker build ./rabbitmq -t rabbitmq
+    docker build ./broker -t rabbitmq
 
     if [[ $1 == '-r' ]]; then
-    echo "Starting frontend in detached mode.."
-    docker run --name rabbitmq -d -t -p "5672:5672" rabbitmq
+      echo "Starting broker in detached mode.."
+      docker run --name rabbitmq -d -t -p "5672:5672" -p "8080:15672" rabbitmq
     fi
 }
 
@@ -45,9 +45,9 @@ deploy(){
 
 
 if [[ $# -eq 0 ]]; then
-  api "-r"
-  frontend "-r"
-  broker "-r"
+  api
+  frontend
+  broker
   exit 0
 fi
 
@@ -65,16 +65,19 @@ for i in "$@"; do
     "frontend") 
       frontend $run
       ;;
-    "package") 
-    package
-    ;;
-    "deploy") 
-    deploy
-    ;;
+    "broker")
+      broker $run
+      ;;
+    "package")
+      package
+      ;;
+    "deploy")
+      deploy
+      ;;
     *)
       echo 'One or more invalid arguments.'
       echo "Usage: $0 [OPTIONAL] {db|frontend|broker|charts|{empty}}"
-      echo 'Optional: < -r > - Build and run container >'
+      echo 'Optional: < -r > - Build and run container'
       echo "Example: $0 -r api frontend"
       exit 1
       ;;
