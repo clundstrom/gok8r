@@ -4,24 +4,39 @@
 
 replicaCount: 2
 
-pods:
-  api:
-    podName: "api"
-    image: api
-    tag: ""
+api:
+  service:
+    type: NodePort
     port: 8000
-  frontend:
-    podName: "frontend"
-    image: frontend
-    tag: ""
+    nodePort: 30000
+  podName: "api"
+  image: api
+  tag: ""
+  containerPort: 8000
+
+frontend:
+  service:
+    type: NodePort
     port: 80
-  broker:
-    podName: "broker"
-    image: broker
-    tag: ""
-    port: 5672
+    nodePort: 30001
+  podName: "frontend"
+  image: frontend
+  tag: ""
+  containerPort: 80
 
+broker:
+  service:
+    type: NodePort
+    port: 15672
+    nodePort: 30002
 
+  podName: "broker"
+  image: rabbitmq
+  tag: ""
+  containerPort: 15672 #5672
+
+image:
+    pullPolicy: Never
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
@@ -32,31 +47,37 @@ serviceAccount:
   name: "gok8r-service-user"
 
 podAnnotations: {}
-podSecurityContext: {}
-securityContext: {}
 
-service:
-  type: NodePort
-  port: 8000
-  nodePort: 30000
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
 
 readiness:
-  port: 8000
-  initialDelaySeconds: 5
+  initialDelaySeconds: 60
   periodSeconds: 5
 
 ingress:
-  enabled: true
+  enabled: false
   className: ""
   annotations: {}
-     kubernetes.io/ingress.class: nginx
-#     kubernetes.io/tls-acme: "true"
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
   hosts:
-    - host:
+    - host: gok8r.local
       paths:
         - path: /
           pathType: ImplementationSpecific
   tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
 
 resources:
   limits:
@@ -66,6 +87,15 @@ resources:
     cpu: 100m
     memory: 128Mi
 
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
 nodeSelector: {}
+
 tolerations: []
+
 affinity: {}
