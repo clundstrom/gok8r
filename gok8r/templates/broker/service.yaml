@@ -9,7 +9,6 @@ spec:
   ports:
     - port: {{ .Values.broker.service.port }}
       targetPort: {{ .Values.broker.service.port }}
-      nodePort: {{ .Values.broker.service.nodePort }}
       protocol: TCP
       name: broker
   selector:

@@ -2,13 +2,16 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+# Defines the namespace of the cluster
+namespace: gok8r
 replicaCount: 2
 
+# Microservice configs
 api:
   service:
-    type: NodePort
+    type: ClusterIP
     port: 8000
-    nodePort: 30000
+    targetPort: 8000
   podName: "api"
   image: api
   tag: ""
@@ -16,9 +19,9 @@ api:
 
 frontend:
   service:
-    type: NodePort
+    type: ClusterIP
     port: 80
-    nodePort: 30001
+    targetPort: 80
   podName: "frontend"
   image: frontend
   tag: ""
@@ -26,21 +29,23 @@ frontend:
 
 broker:
   service:
-    type: NodePort
+    type: ClusterIP
     port: 15672
-    nodePort: 30002
+    targetPort: 15672
 
   podName: "broker"
   image: rabbitmq
   tag: ""
   containerPort: 15672 #5672
 
+# Image repo policies
 image:
     pullPolicy: Never
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
+# Service account settings
 serviceAccount:
   create: true
   annotations: {}
@@ -59,9 +64,11 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
+# Readiness and liveness probes
 readiness:
   initialDelaySeconds: 60
   periodSeconds: 5
+
 
 ingress:
   enabled: false

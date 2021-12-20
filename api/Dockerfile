@@ -4,8 +4,8 @@ RUN mkdir /app
 ADD . /app
 WORKDIR /app
 
-RUN go build main.go
+RUN go build -o ./bin/main.exe ./src/main.go
 
 EXPOSE 8000
 
-CMD ["/app/main"]
+CMD ["/app/bin/main.exe"]
