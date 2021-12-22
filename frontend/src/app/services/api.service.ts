@@ -9,6 +9,6 @@ export class ApiService {
   constructor(private http: HttpClient) { }
 
   getTaskResult(){
-    return this.http.get('/api/', {responseType: 'text'})
+    return this.http.get('/api/v1/', {responseType: 'text'})
   }
 }

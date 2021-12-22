@@ -19,11 +19,17 @@ func GetOutboundIP() net.IP {
 	return localAddr.IP
 }
 
-func testRoute(w http.ResponseWriter, r *http.Request) {
-	f.Fprintf(w, "%s", GetOutboundIP())
+func defaultRoute(w http.ResponseWriter, r *http.Request) {
+	_, err := f.Fprintf(w, "%s", GetOutboundIP())
+
+	if err != nil {
+		log.Printf("%s for %s -- 500\n", r.Host, r.RequestURI)
+		return
+	}
+	log.Printf("%s for %s -- 200\n", r.Host, r.RequestURI)
 }
 
 func main() {
-	http.HandleFunc("/", testRoute)
+	http.HandleFunc("/", defaultRoute)
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }
