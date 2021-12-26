@@ -7,6 +7,53 @@ import (
 	"net/http"
 )
 
+var messageChan chan string
+
+func handleSSE() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Connection", "keep-alive")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+
+		messageChan = make(chan string)
+		log.Printf("open connection %s", r.Host)
+
+		// close channel on exit
+		defer func() {
+			close(messageChan)
+			messageChan = nil
+			log.Printf("client connection closed")
+		}()
+
+		flusher, _ := w.(http.Flusher)
+
+		for {
+			select {
+			case message := <-messageChan:
+				_, err := f.Fprintf(w, "%s\n\n", message)
+				if err != nil {
+					return
+				}
+
+				flusher.Flush()
+			case <-r.Context().Done():
+				return
+			}
+		}
+	}
+}
+
+func sendMessage(message string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if messageChan != nil {
+			log.Printf("Write %b to %s", len(message), r.Host)
+			messageChan <- "data: " + message
+		}
+	}
+}
+
 func GetOutboundIP() net.IP {
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
@@ -21,7 +68,6 @@ func GetOutboundIP() net.IP {
 
 func defaultRoute(w http.ResponseWriter, r *http.Request) {
 	_, err := f.Fprintf(w, "%s", GetOutboundIP())
-
 	if err != nil {
 		log.Printf("%s for %s -- 500\n", r.Host, r.RequestURI)
 		return
@@ -30,6 +76,8 @@ func defaultRoute(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	http.HandleFunc("/api/v1/handshake", handleSSE())
+	http.HandleFunc("/api/v1/sendmessage", sendMessage("hello client"))
 	http.HandleFunc("/", defaultRoute)
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }

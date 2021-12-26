@@ -11,6 +11,7 @@ import {MatButtonToggleModule} from "@angular/material/button-toggle";
 import {HttpClientModule} from "@angular/common/http";
 import {MatSnackBarModule} from "@angular/material/snack-bar";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
+import {MatListModule} from "@angular/material/list";
 
 @NgModule({
   declarations: [
@@ -26,6 +27,7 @@ import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
     MatButtonToggleModule,
     HttpClientModule,
     MatSnackBarModule,
+    MatListModule,
     MatProgressSpinnerModule
   ],
   providers: [],
