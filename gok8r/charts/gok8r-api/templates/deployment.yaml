@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.broker.podName }}-deployment
+  name: {{ include "gok8r-api.fullname" . }}-deployment
   labels:
-    {{- include "gok8r.labels" . | nindent 4 }}
+    {{- include "gok8r-api.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "gok8r.selectorLabels" . | nindent 6 }}
+      {{- include "gok8r-api.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -18,38 +18,35 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "gok8r.selectorLabels" . | nindent 8 }}
+        {{- include "gok8r-api.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "gok8r.serviceAccountName" . }}
+      serviceAccountName: {{ include "gok8r-api.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: {{ .Values.broker.podName}}-{{ .Chart.Name }}
+        - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: {{ .Values.broker.image }}
+          image: "{{ .Values.image.repository }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - name: management-port
-              containerPort: {{ .Values.broker.containerPort }}
-              protocol: TCP
-            - name: queue-port
-              containerPort: 5672
+            - name: http
+              containerPort: {{ .Values.service.port}}
               protocol: TCP
           livenessProbe:
             httpGet:
               path: /
-              port: {{ .Values.broker.containerPort }}
-            initialDelaySeconds: {{ .Values.readiness.initialDelaySeconds }}
-            periodSeconds: {{ .Values.readiness.periodSeconds }}
+              port: {{ .Values.service.port}}
+            initialDelaySeconds: {{ .Values.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.liveness.periodSeconds }}
           readinessProbe:
             httpGet:
               path: /
-              port: {{ .Values.broker.containerPort }}
+              port: {{ .Values.service.port}}
             initialDelaySeconds: {{ .Values.readiness.initialDelaySeconds }}
             periodSeconds: {{ .Values.readiness.periodSeconds }}
           resources:
