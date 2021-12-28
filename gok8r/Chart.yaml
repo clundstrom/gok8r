@@ -22,3 +22,21 @@ version: 0.1.0
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
 appVersion: "1.16.0"
+
+dependencies:
+  - name: gok8r-frontend
+    condition: gok8r-frontend.enabled
+    version: 0.1.0
+    alias: frontend
+  - name: gok8r-api
+    condition: gok8r-api.enabled
+    version: 0.1.0
+    alias: api
+  - name: gok8r-broker
+    condition: gok8r-broker.enabled
+    version: 0.1.0
+    alias: broker
+  - name: gok8r-elk
+    condition: gok8r-elk.enabled
+    version: 0.1.0
+    alias: elk

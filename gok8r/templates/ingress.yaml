@@ -1,24 +1,38 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
- name: ingress-gok8r
+  name: ingress-gok8r
 spec:
   ingressClassName: nginx
   rules:
-   - host: gok8r.local
-     http:
-       paths:
-         - path: /
-           pathType: Prefix
-           backend:
-             service:
-               name: frontend-service
-               port:
-                 number: 80
-         - path: /api/v1
-           pathType: Prefix
-           backend:
-             service:
-               name: api-service
-               port:
-                 number: 8000
+    - host: gok8r.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gok8r-frontend-service
+                port:
+                  number: 80
+          - path: /api/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: gok8r-api-service
+                port:
+                  number: 8000
+          - path: /kibana
+            pathType: Prefix
+            backend:
+              service:
+                name: kibana-np
+                port:
+                  number: 8080
+          - path: /event-manager
+            pathType: Prefix
+            backend:
+              service:
+                name: gok8r-broker-service
+                port:
+                  number: 15672
