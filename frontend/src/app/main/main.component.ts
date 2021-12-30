@@ -1,6 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {MatSnackBar} from "@angular/material/snack-bar";
 import {ApiService} from "../services/api.service";
+import {AppConfigService} from "../services/app-config.service";
 
 @Component({
   selector: 'app-main',
@@ -10,11 +11,11 @@ import {ApiService} from "../services/api.service";
 export class MainComponent implements OnInit {
 
   private SNACKBAR_UPTIME_MS = 3000;
-  private TASK_TRIGGER_MSG = 'Task triggered on host: ';
+  private readonly TASK_TRIGGER_MSG = 'Connected to API: ';
+  private readonly TASK_TRIGGER_FAILED_MSG = 'Could not connect to API';
   spinner = false;
-  eventLog: any = [];
 
-  constructor(private api: ApiService, private snackBar: MatSnackBar) {
+  constructor(private api: ApiService, private snackBar: MatSnackBar, private config: AppConfigService) {
   }
 
   ngOnInit(): void {
@@ -23,11 +24,19 @@ export class MainComponent implements OnInit {
   btnTrigger() {
     this.spinner = true;
 
-    this.api.getSSE("/api/v1/handshake").subscribe(res => {
-      if (res) {
-        this.snackBar.open(this.TASK_TRIGGER_MSG + res)._dismissAfter(this.SNACKBAR_UPTIME_MS);
-        this.eventLog.push(res);
-      }
-    });
+    this.api.getSSE("/api/v1/handshake").subscribe(
+      res => {
+        this.snackBar.open(this.TASK_TRIGGER_MSG + res)._dismissAfter(this.SNACKBAR_UPTIME_MS)
+      },
+      err => {
+        this.snackBar.open(this.TASK_TRIGGER_FAILED_MSG)._dismissAfter(this.SNACKBAR_UPTIME_MS);
+        console.log(err);
+        this.spinner = false;
+      },
+    );
+  }
+
+  displayConfig() {
+    this.snackBar.open("Current API Host: " + this.config.config.apiHostUrl)._dismissAfter(this.SNACKBAR_UPTIME_MS);
   }
 }
