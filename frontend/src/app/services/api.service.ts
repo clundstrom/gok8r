@@ -7,13 +7,20 @@ import {Observable} from "rxjs";
 })
 export class ApiService {
 
+  private readonly CONNECTED = "Connected";
+
   constructor(private http: HttpClient, private _zone: NgZone) { }
 
   getSSE(uri: any): Observable<string> {
     return new Observable<string>((observer) => {
       let eventSource = new EventSource(uri);
+
+      eventSource.onopen = (event) => {
+        console.log(this.CONNECTED);
+      };
+
       eventSource.onmessage = (event) => {
-        observer.next(event.data);
+        this._zone.run(() => observer.next(event.data));
       };
       eventSource.onerror = (error) => {
         if(eventSource.readyState === 0) {

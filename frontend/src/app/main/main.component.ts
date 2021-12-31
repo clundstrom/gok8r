@@ -11,7 +11,7 @@ import {AppConfigService} from "../services/app-config.service";
 export class MainComponent implements OnInit {
 
   private SNACKBAR_UPTIME_MS = 3000;
-  private readonly TASK_TRIGGER_MSG = 'Connected to API: ';
+  private readonly STATUS = 'Status: ';
   private readonly TASK_TRIGGER_FAILED_MSG = 'Could not connect to API';
   spinner = false;
 
@@ -24,9 +24,9 @@ export class MainComponent implements OnInit {
   btnTrigger() {
     this.spinner = true;
 
-    this.api.getSSE("/api/v1/handshake").subscribe(
+    this.api.getSSE("/api/v1/stream").subscribe(
       res => {
-        this.snackBar.open(this.TASK_TRIGGER_MSG + res)._dismissAfter(this.SNACKBAR_UPTIME_MS)
+        this.snackBar.open(this.STATUS + res)._dismissAfter(this.SNACKBAR_UPTIME_MS)
       },
       err => {
         this.snackBar.open(this.TASK_TRIGGER_FAILED_MSG)._dismissAfter(this.SNACKBAR_UPTIME_MS);
