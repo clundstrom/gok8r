@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-cm
+  labels:
+      {{- include "gok8r-frontend.labels" . | nindent 4 }}
+data:
+  app-config.json: |
+    {"apiHostUrl": "http://gok8r.local"}
