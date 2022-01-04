@@ -28,6 +28,8 @@ func handleSSE() http.HandlerFunc {
 		}()
 
 		flusher, _ := w.(http.Flusher)
+		_, _ = f.Fprintf(w, "%s %s\n\n", "data: Connected to ", GetOutboundIP())
+		flusher.Flush()
 
 		for {
 			select {
@@ -47,6 +49,7 @@ func handleSSE() http.HandlerFunc {
 
 func sendMessage(message string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 		if messageChan != nil {
 			log.Printf("Write %b to %s", len(message), r.Host)
 			messageChan <- "data: " + message
@@ -76,7 +79,7 @@ func defaultRoute(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/api/v1/handshake", handleSSE())
+	http.HandleFunc("/api/v1/stream", handleSSE())
 	http.HandleFunc("/api/v1/sendmessage", sendMessage("hello client"))
 	http.HandleFunc("/", defaultRoute)
 	log.Fatal(http.ListenAndServe(":8000", nil))
