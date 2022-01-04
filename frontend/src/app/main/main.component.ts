@@ -36,6 +36,10 @@ export class MainComponent implements OnInit {
     );
   }
 
+  triggerBackendMessage(){
+    this.api.get("/api/v1/sendmessage").subscribe((res) => res)
+  }
+
   displayConfig() {
     this.snackBar.open("Current API Host: " + this.config.config.apiHostUrl)._dismissAfter(this.SNACKBAR_UPTIME_MS);
   }

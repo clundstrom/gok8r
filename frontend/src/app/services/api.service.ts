@@ -11,6 +11,10 @@ export class ApiService {
 
   constructor(private http: HttpClient, private _zone: NgZone) { }
 
+  get(uri: string){
+    return this.http.get(uri);
+  }
+
   getSSE(uri: any): Observable<string> {
     return new Observable<string>((observer) => {
       let eventSource = new EventSource(uri);
