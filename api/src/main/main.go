@@ -9,6 +9,8 @@ import (
 
 var messageChan chan string
 
+// Open a server-sent-event stream.
+// On a successful connection, a Connected to ${IP} is sent.
 func handleSSE() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 

@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"log"
+	"os"
 )
 
 func failOnError(err error, msg string) {
@@ -11,8 +13,26 @@ func failOnError(err error, msg string) {
 	}
 }
 
+// Log if required env not set
+func envCheck(key string) string {
+	val, ok := os.LookupEnv(key)
+	if !ok {
+		log.Printf("%s not set\n", key)
+	}
+	return val
+}
+
 func main() {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+
+	host := envCheck("HOST")
+	port := envCheck("PORT")
+	user := envCheck("USER")
+	pass := envCheck("PASS")
+
+	const taskPool = "taskPool"
+
+	dialUrl := fmt.Sprintf("amqp://%s:%s@%s:%s/", user, pass, host, port)
+	conn, err := amqp.Dial(dialUrl)
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
 
@@ -21,12 +41,12 @@ func main() {
 	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
-		"hello", // name
-		false,   // durable
-		false,   // delete when unused
-		false,   // exclusive
-		false,   // no-wait
-		nil,     // arguments
+		taskPool, // name
+		false,    // durable
+		false,    // delete when unused
+		false,    // exclusive
+		false,    // no-wait
+		nil,      // arguments
 	)
 	failOnError(err, "Failed to declare a queue")
 
