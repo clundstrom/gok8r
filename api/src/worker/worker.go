@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"gok8r/src/queue"
 	"log"
-	"os"
 )
 
 func failOnError(err error, msg string) {
@@ -13,62 +13,49 @@ func failOnError(err error, msg string) {
 	}
 }
 
-// Log if required env not set
-func envCheck(key string) string {
-	val, ok := os.LookupEnv(key)
-	if !ok {
-		log.Printf("%s not set\n", key)
-	}
-	return val
-}
-
 func main() {
-
-	host := envCheck("HOST")
-	port := envCheck("PORT")
-	user := envCheck("USER")
-	pass := envCheck("PASS")
+	pConn := queue.MakeConn()
 
 	const taskPool = "taskPool"
 
-	dialUrl := fmt.Sprintf("amqp://%s:%s@%s:%s/", user, pass, host, port)
+	dialUrl := fmt.Sprintf("amqp://%s:%s@%s:%s/", pConn.User(), pConn.Pass(), pConn.Host(), pConn.Port())
 	conn, err := amqp.Dial(dialUrl)
-	failOnError(err, "Failed to connect to RabbitMQ")
+	failOnError(err, queue.FailedConn)
 	defer conn.Close()
 
 	ch, err := conn.Channel()
-	failOnError(err, "Failed to open a channel")
+	failOnError(err, queue.FailedChan)
 	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
-		taskPool, // name
-		false,    // durable
-		false,    // delete when unused
-		false,    // exclusive
-		false,    // no-wait
-		nil,      // arguments
+		taskPool,
+		false,
+		false,
+		false,
+		false,
+		nil,
 	)
-	failOnError(err, "Failed to declare a queue")
+	failOnError(err, queue.FailedQueue)
 
 	msgs, err := ch.Consume(
-		q.Name, // queue
-		"",     // consumer
-		true,   // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    // args
+		q.Name,
+		"",
+		true,
+		false,
+		false,
+		false,
+		nil,
 	)
-	failOnError(err, "Failed to register a consumer")
+	failOnError(err, queue.FailedRegConsumer)
 
 	forever := make(chan bool)
 
 	go func() {
 		for d := range msgs {
-			log.Printf("Received a message: %s", d.Body)
+			log.Printf("Received: %s", d.Body)
 		}
 	}()
 
-	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
+	log.Printf(" [*] Awaiting work. To exit press CTRL+C")
 	<-forever
 }

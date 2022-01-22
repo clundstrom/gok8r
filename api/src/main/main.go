@@ -2,6 +2,7 @@ package main
 
 import (
 	f "fmt"
+	"gok8r/src/queue"
 	"log"
 	"net"
 	"net/http"
@@ -80,9 +81,25 @@ func defaultRoute(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%s for %s -- 200\n", r.Host, r.RequestURI)
 }
 
+func queueResponse(seconds int) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !queue.Work(seconds) {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Message queued"))
+		} else {
+			w.WriteHeader(http.StatusOK)
+			_, err := w.Write([]byte("Message queued"))
+			if err != nil {
+				return
+			}
+		}
+	}
+}
+
 func main() {
 	http.HandleFunc("/api/v1/stream", handleSSE())
 	http.HandleFunc("/api/v1/sendmessage", sendMessage("hello client"))
+	http.HandleFunc("/api/v1/queue", queueResponse(5))
 	http.HandleFunc("/", defaultRoute)
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }

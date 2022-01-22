@@ -1,4 +1,4 @@
-module gok8r/src
+module gok8r
 
 go 1.17
 
