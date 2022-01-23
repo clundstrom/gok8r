@@ -3,6 +3,7 @@ import {MatSnackBar} from "@angular/material/snack-bar";
 import {ApiService} from "../services/api.service";
 import {AppConfigService} from "../services/app-config.service";
 import {Observable} from "rxjs";
+import {WebsockService} from "../services/websock.service";
 
 @Component({
   selector: 'app-main',
@@ -17,13 +18,13 @@ export class MainComponent implements OnInit {
   private $CONNECTION: Observable<string> | undefined;
   spinner = false;
 
-  constructor(private api: ApiService, private snackBar: MatSnackBar, private config: AppConfigService) {
+  constructor(private wss: WebsockService, private api: ApiService, private snackBar: MatSnackBar, private config: AppConfigService) {
   }
 
   ngOnInit(): void {
   }
 
-  btnTrigger() {
+  subscribe() {
     this.spinner = true;
 
     this.$CONNECTION = this.api.bindStream();
@@ -40,8 +41,12 @@ export class MainComponent implements OnInit {
 
   }
 
-  triggerBackendMessage() {
-    this.api.getHost().subscribe((res) => res)
+  recvSSE() {
+    this.api.sendMessage().subscribe((res) => res)
+  }
+
+  recvSocket(){
+    this.wss.sendMessage("Hi Server");
   }
 
   displayConfig() {

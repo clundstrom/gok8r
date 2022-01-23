@@ -1,18 +1,19 @@
 import {Injectable, NgZone} from '@angular/core';
 import {HttpClient, HttpErrorResponse} from "@angular/common/http";
 import {AppConfigService} from "./app-config.service";
-import {EventPublisher} from "../intefaces/eventpublisher";
 import {SseService} from "./sse.service";
 import {catchError} from 'rxjs/operators';
+import {WebsockService} from "./websock.service";
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
 
-  publishers: Array<EventPublisher> = [];
-
-  constructor(private http: HttpClient, private _zone: NgZone, private config: AppConfigService, private sse: SseService) {
+  constructor(private http: HttpClient, private _zone: NgZone,
+              private config: AppConfigService,
+              private ws: WebsockService,
+              private sse: SseService) {
   }
 
   private static handleError(error: HttpErrorResponse) {
@@ -30,11 +31,18 @@ export class ApiService {
     return this.http.get(this.config.getApiHost() + uri);
   }
 
-  getHost() {
+  sendMessage() {
     return this.get("/api/v1/sendmessage").pipe(catchError(ApiService.handleError))
   }
 
   bindStream() {
-    return this.sse.bind("/api/v1/stream");
+    let $obs;
+    try {
+      $obs = this.ws.bind(this.config.getApiHost() + "/api/v1/socket");
+    } catch (e) {
+      console.warn("Could not bind to websocket, falling back on SSE.");
+      $obs = this.sse.bind(this.config.getApiHost() + "/api/v1/stream");
+    }
+    return $obs;
   }
 }

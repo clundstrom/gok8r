@@ -12,7 +12,7 @@ var messageChan chan string
 
 // Open a server-sent-event stream.
 // On a successful connection, a Connected to ${IP} is sent.
-func handleSSE() http.HandlerFunc {
+func getSSE() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		w.Header().Set("Content-Type", "text/event-stream")
@@ -97,7 +97,8 @@ func queueResponse(seconds int) http.HandlerFunc {
 }
 
 func main() {
-	http.HandleFunc("/api/v1/stream", handleSSE())
+	http.HandleFunc("/api/v1/socket", echo)
+	http.HandleFunc("/api/v1/stream", getSSE())
 	http.HandleFunc("/api/v1/sendmessage", sendMessage("hello client"))
 	http.HandleFunc("/api/v1/queue", queueResponse(5))
 	http.HandleFunc("/", defaultRoute)

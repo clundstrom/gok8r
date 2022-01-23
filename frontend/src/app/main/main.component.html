@@ -2,8 +2,9 @@
 <mat-card>
     <mat-card-title>Example: Message broker</mat-card-title>
     <mat-card-content>Trigger long running task.</mat-card-content>
-    <button mat-raised-button (click)="btnTrigger()" color="accent">Subscribe to server events</button>
-  <button mat-raised-button (click)="triggerBackendMessage()" color="accent">Trigger server event</button>
+    <button mat-raised-button (click)="subscribe()" color="accent">Subscribe to server events</button>
+    <button mat-raised-button (click)="recvSocket()" color="accent">Send WS msg</button>
+  <button mat-raised-button (click)="recvSSE()" color="accent">Trigger server event</button>
   <button mat-raised-button (click)="displayConfig()" color="accent">Show API endpoint</button>
 </mat-card>
 <mat-spinner *ngIf="spinner" color="accent"></mat-spinner>
