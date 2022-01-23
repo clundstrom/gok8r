@@ -26,7 +26,7 @@ export class MainComponent implements OnInit {
   btnTrigger() {
     this.spinner = true;
 
-    this.$CONNECTION = this.api.getSSE(this.config.getApiHost() + "/api/v1/stream");
+    this.$CONNECTION = this.api.bindStream();
     this.$CONNECTION.subscribe(
       (res: string) => {
         this.snackBar.open(this.STATUS + res)._dismissAfter(this.SNACKBAR_UPTIME_MS)
@@ -40,8 +40,8 @@ export class MainComponent implements OnInit {
 
   }
 
-  triggerBackendMessage(){
-    this.api.get(this.config.getApiHost() + "/api/v1/sendmessage").subscribe((res) => res)
+  triggerBackendMessage() {
+    this.api.getHost().subscribe((res) => res)
   }
 
   displayConfig() {
