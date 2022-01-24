@@ -35,21 +35,49 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getSocket() http.HandlerFunc {
+func sendWs(message string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		conn, _ := upgrader.Upgrade(w, r, nil) // error ignored for sake of simplicity
+		_, err := fmt.Fprintf(w, "%s", 200)
 
-		for {
-			// Read message from browser
-			msgType, msg, err := conn.ReadMessage()
-			if err != nil {
-			}
-			// Print the message to the console
-			fmt.Printf("%s sent: %s\n", conn.RemoteAddr(), string(msg))
+		if messageChan != nil {
+			messageChan <- message
+		}
+		
+		if err != nil {
+			log.Printf("%s for %s -- 500\n", r.Host, r.RequestURI)
+			return
+		}
+		log.Printf("%s for %s -- 200\n", r.Host, r.RequestURI)
+	}
+}
 
-			// Write message back to browser
-			if err = conn.WriteMessage(msgType, msg); err != nil {
-			}
+func openSocket(w http.ResponseWriter, r *http.Request) {
+	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
+	c, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Print("upgrade:", err)
+		return
+	}
+	defer c.Close()
+
+	messageChan = make(chan string)
+
+	// close channel on exit
+	defer func() {
+		close(messageChan)
+		messageChan = nil
+		log.Printf("client connection closed")
+	}()
+
+	err = c.WriteMessage(websocket.TextMessage, []byte(`{"message":"Connected"}`))
+
+	for {
+		select {
+		case message := <-messageChan:
+			sendJson := []byte(fmt.Sprintf(`{"message":"%s"}`, message))
+			err = c.WriteMessage(websocket.TextMessage, sendJson)
+		case <-r.Context().Done():
+			return
 		}
 	}
 }

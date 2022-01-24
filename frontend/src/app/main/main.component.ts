@@ -15,6 +15,7 @@ export class MainComponent implements OnInit {
   private SNACKBAR_UPTIME_MS = 3000;
   private readonly STATUS = 'Status: ';
   private readonly TASK_TRIGGER_FAILED_MSG = 'Could not connect to API';
+  private readonly DISCONNECTED = 'Disconnected';
   private $CONNECTION: Observable<string> | undefined;
   spinner = false;
 
@@ -22,31 +23,28 @@ export class MainComponent implements OnInit {
   }
 
   ngOnInit(): void {
-  }
-
-  subscribe() {
     this.spinner = true;
-
     this.$CONNECTION = this.api.bindStream();
     this.$CONNECTION.subscribe(
-      (res: string) => {
-        this.snackBar.open(this.STATUS + res)._dismissAfter(this.SNACKBAR_UPTIME_MS)
-      },
-      (err: string) => {
-        this.snackBar.open(this.TASK_TRIGGER_FAILED_MSG)._dismissAfter(this.SNACKBAR_UPTIME_MS);
-        console.log(err);
+      (msg: any) => this.snackBar.open(this.STATUS + msg.message)._dismissAfter(this.SNACKBAR_UPTIME_MS), // Called whenever there is a message from the server.
+      (err: any) => {
+        if (err.type == "close"){
+          this.snackBar.open(this.DISCONNECTED)._dismissAfter(this.SNACKBAR_UPTIME_MS);
+        }
+        else{
+          this.snackBar.open(this.TASK_TRIGGER_FAILED_MSG)._dismissAfter(this.SNACKBAR_UPTIME_MS);
+          console.log(err);
+        }
         this.spinner = false;
-      },
-    );
-
+      });
   }
 
-  recvSSE() {
-    this.api.sendMessage().subscribe((res) => res)
+  triggerSSE() {
+    this.api.sendSSE().subscribe((res) => res)
   }
 
-  recvSocket(){
-    this.wss.sendMessage("Hi Server");
+  triggerWs(){
+    this.api.sendWs().subscribe((res) => res)
   }
 
   displayConfig() {

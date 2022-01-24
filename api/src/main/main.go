@@ -1,56 +1,57 @@
 package main
 
 import (
+	"bufio"
 	f "fmt"
 	"gok8r/src/queue"
 	"log"
 	"net"
 	"net/http"
+	"os"
+	"strings"
 )
 
 var messageChan chan string
 
 // Open a server-sent-event stream.
 // On a successful connection, a Connected to ${IP} is sent.
-func getSSE() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func getSSE(w http.ResponseWriter, r *http.Request) {
 
-		w.Header().Set("Content-Type", "text/event-stream")
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("Connection", "keep-alive")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-		messageChan = make(chan string)
-		log.Printf("open connection %s", r.Host)
+	messageChan = make(chan string)
+	log.Printf("open connection %s", r.Host)
 
-		// close channel on exit
-		defer func() {
-			close(messageChan)
-			messageChan = nil
-			log.Printf("client connection closed")
-		}()
+	// close channel on exit
+	defer func() {
+		close(messageChan)
+		messageChan = nil
+		log.Printf("client connection closed")
+	}()
 
-		flusher, _ := w.(http.Flusher)
-		_, _ = f.Fprintf(w, "%s %s\n\n", "data: Connected to ", GetOutboundIP())
-		flusher.Flush()
+	flusher, _ := w.(http.Flusher)
+	_, _ = f.Fprintf(w, "%s %s\n\n", "data: Connected to ", GetOutboundIP())
+	flusher.Flush()
 
-		for {
-			select {
-			case message := <-messageChan:
-				_, err := f.Fprintf(w, "%s\n\n", message)
-				if err != nil {
-					return
-				}
-
-				flusher.Flush()
-			case <-r.Context().Done():
+	for {
+		select {
+		case message := <-messageChan:
+			_, err := f.Fprintf(w, "%s\n\n", message)
+			if err != nil {
 				return
 			}
+
+			flusher.Flush()
+		case <-r.Context().Done():
+			return
 		}
 	}
 }
 
-func sendMessage(message string) http.HandlerFunc {
+func sendSSE(message string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		if messageChan != nil {
@@ -96,10 +97,42 @@ func queueResponse(seconds int) http.HandlerFunc {
 	}
 }
 
+func input() {
+	reader := bufio.NewReader(os.Stdin)
+	f.Println("---------------------")
+	f.Println("Gok8r")
+	f.Println("Usage: say <message>")
+	f.Println("---------------------")
+	for {
+		f.Print("-> ")
+		text, _ := reader.ReadString('\n')
+		// convert CRLF to LF
+		text = strings.Replace(text, "\r\n", "", -1)
+
+		if strings.HasPrefix(text, "say") == true {
+			stripped := strings.TrimPrefix(text, "say")
+			stripped = strings.TrimSpace(stripped)
+
+			if messageChan == nil {
+				log.Printf("No client connected to channel.")
+
+			} else {
+				messageChan <- stripped
+				log.Printf("Send: %s", stripped)
+			}
+
+			text = ""
+		}
+	}
+}
+
 func main() {
-	http.HandleFunc("/api/v1/socket", echo)
-	http.HandleFunc("/api/v1/stream", getSSE())
-	http.HandleFunc("/api/v1/sendmessage", sendMessage("hello client"))
+	go input()
+	http.HandleFunc("/api/v1/socket", openSocket)
+	http.HandleFunc("/api/v1/echo", echo)
+	http.HandleFunc("/api/v1/stream", getSSE)
+	http.HandleFunc("/api/v1/sendsse", sendSSE("hello through sse"))
+	http.HandleFunc("/api/v1/sendws", sendWs("hello through ws"))
 	http.HandleFunc("/api/v1/queue", queueResponse(5))
 	http.HandleFunc("/", defaultRoute)
 	log.Fatal(http.ListenAndServe(":8000", nil))

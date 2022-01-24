@@ -31,8 +31,12 @@ export class ApiService {
     return this.http.get(this.config.getApiHost() + uri);
   }
 
-  sendMessage() {
-    return this.get("/api/v1/sendmessage").pipe(catchError(ApiService.handleError))
+  sendSSE() {
+    return this.get("/api/v1/sendsse").pipe(catchError(ApiService.handleError))
+  }
+
+  sendWs() {
+    return this.get("/api/v1/sendws").pipe(catchError(ApiService.handleError))
   }
 
   bindStream() {
@@ -45,4 +49,6 @@ export class ApiService {
     }
     return $obs;
   }
+
+
 }
