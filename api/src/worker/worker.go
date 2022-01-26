@@ -5,11 +5,12 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 	"gok8r/src/queue"
 	"log"
+	"time"
 )
 
-func failOnError(err error, msg string) {
+func printOnError(err error, msg string) {
 	if err != nil {
-		log.Panicf("%s: %s", msg, err)
+		log.Println("%s: %s", msg, err)
 	}
 }
 
@@ -20,11 +21,11 @@ func main() {
 
 	dialUrl := fmt.Sprintf("amqp://%s:%s@%s:%s/", pConn.User(), pConn.Pass(), pConn.Host(), pConn.Port())
 	conn, err := amqp.Dial(dialUrl)
-	failOnError(err, queue.FailedConn)
+	printOnError(err, queue.FailedConn)
 	defer conn.Close()
 
 	ch, err := conn.Channel()
-	failOnError(err, queue.FailedChan)
+	printOnError(err, queue.FailedChan)
 	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
@@ -35,24 +36,30 @@ func main() {
 		false,
 		nil,
 	)
-	failOnError(err, queue.FailedQueue)
+	printOnError(err, queue.FailedQueue)
 
 	msgs, err := ch.Consume(
 		q.Name,
 		"",
-		true,
 		false,
+		true,
 		false,
 		false,
 		nil,
 	)
-	failOnError(err, queue.FailedRegConsumer)
+	printOnError(err, queue.FailedRegConsumer)
 
 	forever := make(chan bool)
 
 	go func() {
 		for d := range msgs {
-			log.Printf("Received: %s", d.Body)
+			log.Printf("Received job: Sleep for %s seconds", d.Body)
+			time.Sleep(time.Duration(5) * time.Second)
+			log.Printf("Job complete: Sleep for %s seconds", d.Body)
+			err := d.Ack(false)
+			if err != nil {
+				return
+			}
 		}
 	}()
 

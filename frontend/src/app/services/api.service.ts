@@ -20,10 +20,8 @@ export class ApiService {
     if (error.status === 0) {
       console.error('An error occurred:', error.error);
     } else {
-      console.error(
-        `Backend returned code ${error.status}, body was: `, error.error);
+      console.error(`Backend returned code ${error.status}, body was: `, error.error);
     }
-    // Return an observable with a user-facing error message.
     return 'Something bad happened; please try again later.';
   }
 
@@ -44,7 +42,7 @@ export class ApiService {
     try {
       $obs = this.ws.bind(this.config.getApiHost() + "/api/v1/socket");
     } catch (e) {
-      console.warn("Could not bind to websocket, falling back on SSE.");
+      console.warn("Could not bind to websocket, falling back on server-sent events.");
       $obs = this.sse.bind(this.config.getApiHost() + "/api/v1/stream");
     }
     return $obs;

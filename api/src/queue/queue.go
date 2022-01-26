@@ -12,23 +12,24 @@ const FailedChan = "Failed to open a channel"
 const FailedQueue = "Failed to declare queue"
 const FailedRegConsumer = "Failed to register a consumer"
 
-func failOnError(err error, msg string) {
-	if err != nil {
-		log.Panicf("%s: %s", msg, err)
-	}
-}
-
-func Work(work int) bool {
+// ScheduleWork connects to RabbitMQ and schedules a job detailed by the supplied parameter.
+func ScheduleWork(secondsOfWork string) bool {
 	pConn := MakeConn()
 	const taskPool = "taskPool"
 
 	dialUrl := fmt.Sprintf("amqp://%s:%s@%s:%s/", pConn.User(), pConn.Pass(), pConn.Host(), pConn.Port())
 	conn, err := amqp.Dial(dialUrl)
-	failOnError(err, FailedConn)
+	if err != nil {
+		log.Println("%s: %s", FailedConn, err)
+		return false
+	}
+
 	defer conn.Close()
 
 	ch, err := conn.Channel()
-	failOnError(err, FailedChan)
+	if err != nil {
+		log.Println("%s: %s", FailedChan, err)
+	}
 	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
@@ -39,9 +40,10 @@ func Work(work int) bool {
 		false,
 		nil,
 	)
-	failOnError(err, FailedQueue)
+	if err != nil {
+		log.Println("%s: %s", FailedQueue, err)
+	}
 
-	body := "Hello World!"
 	err = ch.Publish(
 		"",
 		q.Name,
@@ -49,10 +51,12 @@ func Work(work int) bool {
 		false,
 		amqp.Publishing{
 			ContentType: "text/plain",
-			Body:        []byte(body),
+			Body:        []byte(secondsOfWork),
 		})
-	failOnError(err, NotPublished)
-	log.Printf(" [x] Sent %s\n", body)
+	if err != nil {
+		log.Println("%s: %s", NotPublished, err)
+	}
+	log.Printf(" [x] Sent %s\n", secondsOfWork)
 
 	return true
 }

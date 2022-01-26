@@ -37,12 +37,12 @@ func echo(w http.ResponseWriter, r *http.Request) {
 
 func sendWs(message string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		_, err := fmt.Fprintf(w, "%s", 200)
+		_, err := fmt.Fprintf(w, "%d", 200)
 
 		if messageChan != nil {
 			messageChan <- message
 		}
-		
+
 		if err != nil {
 			log.Printf("%s for %s -- 500\n", r.Host, r.RequestURI)
 			return

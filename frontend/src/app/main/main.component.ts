@@ -23,10 +23,10 @@ export class MainComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.spinner = true;
+    this.spinner = true;  
     this.$CONNECTION = this.api.bindStream();
     this.$CONNECTION.subscribe(
-      (msg: any) => this.snackBar.open(this.STATUS + msg.message)._dismissAfter(this.SNACKBAR_UPTIME_MS), // Called whenever there is a message from the server.
+      (msg: any) => this.snackBar.open(this.STATUS + msg.message)._dismissAfter(this.SNACKBAR_UPTIME_MS),
       (err: any) => {
         if (err.type == "close"){
           this.snackBar.open(this.DISCONNECTED)._dismissAfter(this.SNACKBAR_UPTIME_MS);

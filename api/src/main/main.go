@@ -82,11 +82,14 @@ func defaultRoute(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%s for %s -- 200\n", r.Host, r.RequestURI)
 }
 
-func queueResponse(seconds int) http.HandlerFunc {
+func queueResponse(seconds string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if !queue.Work(seconds) {
+		if !queue.ScheduleWork(seconds) {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Message queued"))
+			_, err := w.Write([]byte("Could not queue task."))
+			if err != nil {
+				return
+			}
 		} else {
 			w.WriteHeader(http.StatusOK)
 			_, err := w.Write([]byte("Message queued"))
@@ -133,7 +136,7 @@ func main() {
 	http.HandleFunc("/api/v1/stream", getSSE)
 	http.HandleFunc("/api/v1/sendsse", sendSSE("hello through sse"))
 	http.HandleFunc("/api/v1/sendws", sendWs("hello through ws"))
-	http.HandleFunc("/api/v1/queue", queueResponse(5))
+	http.HandleFunc("/api/v1/queue", queueResponse("5"))
 	http.HandleFunc("/", defaultRoute)
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }
