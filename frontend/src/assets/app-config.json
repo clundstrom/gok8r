@@ -1,4 +1,5 @@
 {
+  "version": "0.1.0",
   "apiHostUrl": "http://localhost:8000",
   "webSocket": "ws://localhost:8000/api/v1/socket"
 }

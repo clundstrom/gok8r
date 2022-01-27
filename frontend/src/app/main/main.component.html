@@ -1,10 +1,11 @@
+<span class="version">gok8r {{this.VERSION}}</span>
 <div class="wrap">
-<mat-card>
-    <mat-card-title>Example: Message broker</mat-card-title>
-    <mat-card-content>Trigger long running task.</mat-card-content>
-  <button mat-raised-button (click)="triggerSSE()" color="accent">Trigger server event</button>
-  <button mat-raised-button (click)="triggerWs()" color="accent">Trigger ws event</button>
-  <button mat-raised-button (click)="displayConfig()" color="accent">Show API endpoint</button>
-</mat-card>
-<mat-spinner *ngIf="spinner" color="accent"></mat-spinner>
+    <mat-card>
+      <mat-card-title>Example: Message broker</mat-card-title>
+      <mat-card-content>Trigger long running task.</mat-card-content>
+      <button mat-raised-button (click)="triggerSSE()" color="accent">Trigger server event</button>
+      <button mat-raised-button (click)="triggerWs()" color="accent">Trigger ws event</button>
+      <button mat-raised-button (click)="displayConfig()" color="accent">Show API endpoint</button>
+    </mat-card>
+    <mat-spinner *ngIf="spinner" color="accent"></mat-spinner>
 </div>

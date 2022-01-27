@@ -17,13 +17,18 @@ export class MainComponent implements OnInit {
   private readonly TASK_TRIGGER_FAILED_MSG = 'Could not connect to API';
   private readonly DISCONNECTED = 'Disconnected';
   private $CONNECTION: Observable<string> | undefined;
+  public VERSION = "";
   spinner = false;
 
   constructor(private wss: WebsockService, private api: ApiService, private snackBar: MatSnackBar, private config: AppConfigService) {
   }
 
   ngOnInit(): void {
-    this.spinner = true;  
+    // Initiate version
+    this.VERSION = this.config.config.version;
+
+    // Bind streams
+    this.spinner = true;
     this.$CONNECTION = this.api.bindStream();
     this.$CONNECTION.subscribe(
       (msg: any) => this.snackBar.open(this.STATUS + msg.message)._dismissAfter(this.SNACKBAR_UPTIME_MS),
