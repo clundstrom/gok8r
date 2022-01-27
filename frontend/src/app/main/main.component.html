@@ -4,6 +4,7 @@
       <mat-card-title>Example: Message broker</mat-card-title>
       <mat-card-content>Trigger long running task.</mat-card-content>
       <button mat-raised-button (click)="triggerSSE()" color="accent">Trigger server event</button>
+      <button mat-raised-button (click)="queueJob()" color="accent">Queue job (30s)</button>
       <button mat-raised-button (click)="triggerWs()" color="accent">Trigger ws event</button>
       <button mat-raised-button (click)="displayConfig()" color="accent">Show API endpoint</button>
     </mat-card>

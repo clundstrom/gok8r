@@ -1,5 +1,5 @@
 import {Injectable, NgZone} from '@angular/core';
-import {HttpClient, HttpErrorResponse} from "@angular/common/http";
+import {HttpClient, HttpErrorResponse, HttpHeaders} from "@angular/common/http";
 import {AppConfigService} from "./app-config.service";
 import {SseService} from "./sse.service";
 import {catchError} from 'rxjs/operators';
@@ -29,12 +29,26 @@ export class ApiService {
     return this.http.get(this.config.getApiHost() + uri);
   }
 
+  post(uri: string, body: any, optional?: any){
+    return this.http.post(this.config.getApiHost() + uri, body, optional);
+  }
+
   sendSSE() {
-    return this.get("/api/v1/sendsse").pipe(catchError(ApiService.handleError))
+    return this.get("/api/v1/sendsse").pipe(catchError(ApiService.handleError));
   }
 
   sendWs() {
-    return this.get("/api/v1/sendws").pipe(catchError(ApiService.handleError))
+    return this.get("/api/v1/sendws").pipe(catchError(ApiService.handleError));
+  }
+
+  queueJob(number: number) {
+    const job = {"id": "30 second job", "seconds": number};
+    const httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type':  'application/json'
+      })
+    };
+    return this.post("/api/v1/queue", job, httpOptions).pipe(catchError(ApiService.handleError));
   }
 
   bindStream() {

@@ -52,6 +52,10 @@ export class MainComponent implements OnInit {
     this.api.sendWs().subscribe((res) => res)
   }
 
+  queueJob() {
+    this.api.queueJob(30).subscribe((res) => console.log(res));
+  }
+
   displayConfig() {
     this.snackBar.open("Current API Host: " + this.config.getApiHost())._dismissAfter(this.SNACKBAR_UPTIME_MS);
   }
