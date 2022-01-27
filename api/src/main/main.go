@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	f "fmt"
-	"gok8r/src/queue"
 	"log"
 	"net"
 	"net/http"
@@ -82,24 +81,6 @@ func defaultRoute(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%s for %s -- 200\n", r.Host, r.RequestURI)
 }
 
-func queueResponse(seconds string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if !queue.ScheduleWork(seconds) {
-			w.WriteHeader(http.StatusBadRequest)
-			_, err := w.Write([]byte("Could not queue task."))
-			if err != nil {
-				return
-			}
-		} else {
-			w.WriteHeader(http.StatusOK)
-			_, err := w.Write([]byte("Message queued"))
-			if err != nil {
-				return
-			}
-		}
-	}
-}
-
 func input() {
 	reader := bufio.NewReader(os.Stdin)
 	f.Println("---------------------")
@@ -136,7 +117,7 @@ func main() {
 	http.HandleFunc("/api/v1/stream", getSSE)
 	http.HandleFunc("/api/v1/sendsse", sendSSE("hello through sse"))
 	http.HandleFunc("/api/v1/sendws", sendWs("hello through ws"))
-	http.HandleFunc("/api/v1/queue", queueResponse("5"))
+	http.HandleFunc("/api/v1/queue", queueJob())
 	http.HandleFunc("/", defaultRoute)
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }

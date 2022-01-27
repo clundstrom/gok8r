@@ -1,15 +1,23 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"gok8r/src/queue"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+}
+
+type Job struct {
+	Id      string `json:"id"`
+	Seconds int    `json:"seconds"`
 }
 
 func echo(w http.ResponseWriter, r *http.Request) {
@@ -48,6 +56,32 @@ func sendWs(message string) http.HandlerFunc {
 			return
 		}
 		log.Printf("%s for %s -- 200\n", r.Host, r.RequestURI)
+	}
+}
+
+// Handles queuing of jobs.
+// Responses are sent via WS
+func queueJob() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var jobDetails Job
+		err := json.NewDecoder(r.Body).Decode(&jobDetails)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+
+		if !queue.ScheduleWork(strconv.Itoa(jobDetails.Seconds)) {
+			messageChan <- "Error: Could not queue job."
+			w.WriteHeader(http.StatusBadRequest)
+			if err != nil {
+				return
+			}
+		} else {
+			w.WriteHeader(http.StatusOK)
+			messageChan <- "Job queued."
+			if err != nil {
+				return
+			}
+		}
 	}
 }
 
