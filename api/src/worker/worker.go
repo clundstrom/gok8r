@@ -5,12 +5,32 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 	"gok8r/src/queue"
 	"log"
+	"strconv"
 	"time"
 )
 
 func printOnError(err error, msg string) {
 	if err != nil {
 		log.Println("%s: %s", msg, err)
+	}
+}
+
+// processIncomingJobs processes incoming deliveries from the
+// rabbitMQ declared channel.
+func processIncomingJobs(jobPool <-chan amqp.Delivery) {
+	for job := range jobPool {
+
+		var parsed string = string(job.Body)
+		log.Printf("Job received: Sleep for %s seconds", parsed)
+
+		duration, _ := strconv.Atoi(parsed)
+
+		time.Sleep(time.Duration(duration) * time.Second)
+		log.Printf("Job complete.")
+		err := job.Ack(false)
+		if err != nil {
+			return
+		}
 	}
 }
 
@@ -42,7 +62,7 @@ func main() {
 		q.Name,
 		"",
 		false,
-		true,
+		false,
 		false,
 		false,
 		nil,
@@ -51,17 +71,7 @@ func main() {
 
 	forever := make(chan bool)
 
-	go func() {
-		for d := range msgs {
-			log.Printf("Received job: Sleep for %s seconds", d.Body)
-			time.Sleep(time.Duration(5) * time.Second)
-			log.Printf("Job complete: Sleep for %s seconds", d.Body)
-			err := d.Ack(false)
-			if err != nil {
-				return
-			}
-		}
-	}()
+	go processIncomingJobs(msgs)
 
 	log.Printf(" [*] Awaiting work. To exit press CTRL+C")
 	<-forever

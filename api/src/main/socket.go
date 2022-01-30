@@ -85,6 +85,11 @@ func queueJob() http.HandlerFunc {
 	}
 }
 
+// openSocket creates a websocket to the client, and opens
+// a string channel from which messages transmitted
+// in and endless loop or until the socket is terminated.
+// An initial 'connected' message is sent
+// on opening the socket.
 func openSocket(w http.ResponseWriter, r *http.Request) {
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	c, err := upgrader.Upgrade(w, r, nil)

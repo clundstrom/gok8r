@@ -81,6 +81,8 @@ func defaultRoute(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%s for %s -- 200\n", r.Host, r.RequestURI)
 }
 
+// input takes a string input via stdin, and transmits the
+// message to the connected channel
 func input() {
 	reader := bufio.NewReader(os.Stdin)
 	f.Println("---------------------")
@@ -104,7 +106,6 @@ func input() {
 				messageChan <- stripped
 				log.Printf("Send: %s", stripped)
 			}
-
 			text = ""
 		}
 	}
