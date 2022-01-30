@@ -53,7 +53,7 @@ export class MainComponent implements OnInit {
   }
 
   queueJob() {
-    this.api.queueJob(30).subscribe((res) => console.log(res));
+    this.api.queueJob(30).subscribe();
   }
 
   displayConfig() {
