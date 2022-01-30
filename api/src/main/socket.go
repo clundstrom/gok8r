@@ -108,7 +108,6 @@ func openSocket(w http.ResponseWriter, r *http.Request) {
 		log.Printf("client connection closed")
 	}()
 
-	w.WriteHeader(http.StatusOK)
 	err = c.WriteMessage(websocket.TextMessage, []byte(`{"message":"Connected"}`))
 
 	for {
