@@ -48,7 +48,7 @@ export class ApiService {
         'Content-Type':  'application/json'
       })
     };
-    return this.post("/api/v1/queue", job, httpOptions).pipe(catchError(ApiService.handleError));
+    return this.post("/api/v1/queue?id=" + this.ws.getSocketId(), job, httpOptions).pipe(catchError(ApiService.handleError));
   }
 
   bindStream() {

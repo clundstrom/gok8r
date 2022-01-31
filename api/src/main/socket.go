@@ -19,6 +19,10 @@ type Job struct {
 	Id      string `json:"id"`
 	Seconds int    `json:"seconds"`
 }
+type SocketChannel struct {
+	SocketChan chan string `json:"socketChan"`
+	RemoteAddr string      `json:"remoteAddr"`
+}
 
 func echo(w http.ResponseWriter, r *http.Request) {
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
@@ -59,14 +63,28 @@ func sendWs(message string) http.HandlerFunc {
 	}
 }
 
+func getUserChannel(socketChannel map[string]SocketChannel, r *http.Request) chan string {
+	sock := socketChannel[r.URL.Query().Get("id")]
+	return sock.SocketChan
+}
+
 // Handles queuing of jobs.
 // Responses are sent via WS
-func queueJob() http.HandlerFunc {
+func queueJob(socketChannel map[string]SocketChannel) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var jobDetails Job
 		err := json.NewDecoder(r.Body).Decode(&jobDetails)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+
+		messageChan = getUserChannel(socketChannel, r)
+
+		if messageChan == nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Illegal socket id."))
+			fmt.Println("Illegal socket id.")
+			return
 		}
 
 		if !queue.ScheduleWork(strconv.Itoa(jobDetails.Seconds)) {
@@ -90,33 +108,50 @@ func queueJob() http.HandlerFunc {
 // in and endless loop or until the socket is terminated.
 // An initial 'connected' message is sent
 // on opening the socket.
-func openSocket(w http.ResponseWriter, r *http.Request) {
-	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
-	c, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Print("upgrade:", err)
-		return
-	}
-	defer c.Close()
+func openSocket(connections map[string]SocketChannel) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		upgrader.CheckOrigin = func(r *http.Request) bool { return true }
+		c, err := upgrader.Upgrade(w, r, nil)
 
-	messageChan = make(chan string)
-
-	// close channel on exit
-	defer func() {
-		close(messageChan)
-		messageChan = nil
-		log.Printf("client connection closed")
-	}()
-
-	err = c.WriteMessage(websocket.TextMessage, []byte(`{"message":"Connected"}`))
-
-	for {
-		select {
-		case message := <-messageChan:
-			sendJson := []byte(fmt.Sprintf(`{"message":"%s"}`, message))
-			err = c.WriteMessage(websocket.TextMessage, sendJson)
-		case <-r.Context().Done():
+		if err != nil {
+			log.Print("upgrade:", err)
 			return
+		}
+		defer func(c *websocket.Conn) {
+			err := c.Close()
+			if err != nil {
+				delete(connections, c.RemoteAddr().String())
+			}
+		}(c)
+
+		messageChan = make(chan string)
+
+		// Assign a unique id to each socket, and store in a map
+		// When socket is closed, delete channel reference from list
+		// On subsequent post request, include the response socket uuid
+		connections[r.URL.Query().Get("id")] = SocketChannel{
+			SocketChan: messageChan,
+			RemoteAddr: r.RemoteAddr,
+		}
+
+		// close channel on exit
+		defer func() {
+			delete(connections, r.RemoteAddr)
+			messageChan = nil
+			close(messageChan)
+			log.Printf("client connection closed")
+		}()
+
+		err = c.WriteMessage(websocket.TextMessage, []byte(`{"message":"Connected"}`))
+
+		for {
+			select {
+			case message := <-messageChan:
+				sendJson := []byte(fmt.Sprintf(`{"message":"%s"}`, message))
+				err = c.WriteMessage(websocket.TextMessage, sendJson)
+			case <-r.Context().Done():
+				return
+			}
 		}
 	}
 }

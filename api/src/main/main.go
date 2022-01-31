@@ -75,10 +75,10 @@ func GetOutboundIP() net.IP {
 func defaultRoute(w http.ResponseWriter, r *http.Request) {
 	_, err := f.Fprintf(w, "%s", GetOutboundIP())
 	if err != nil {
-		log.Printf("%s for %s -- 500\n", r.Host, r.RequestURI)
+		log.Printf("%s for %s -- 500\n", r.RemoteAddr, r.RequestURI)
 		return
 	}
-	log.Printf("%s for %s -- 200\n", r.Host, r.RequestURI)
+	log.Printf("%s for %s -- 200\n", r.RemoteAddr, r.RequestURI)
 }
 
 // input takes a string input via stdin, and transmits the
@@ -112,13 +112,15 @@ func input() {
 }
 
 func main() {
+
+	SocketConns := make(map[string]SocketChannel)
 	go input()
-	http.HandleFunc("/api/v1/socket", openSocket)
+	http.HandleFunc("/api/v1/socket", openSocket(SocketConns))
 	http.HandleFunc("/api/v1/echo", echo)
 	http.HandleFunc("/api/v1/stream", getSSE)
 	http.HandleFunc("/api/v1/sendsse", sendSSE("hello through sse"))
 	http.HandleFunc("/api/v1/sendws", sendWs("hello through ws"))
-	http.HandleFunc("/api/v1/queue", queueJob())
+	http.HandleFunc("/api/v1/queue", queueJob(SocketConns))
 	http.HandleFunc("/", defaultRoute)
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }
