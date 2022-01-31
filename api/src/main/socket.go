@@ -87,7 +87,9 @@ func queueJob(socketChannel map[string]SocketChannel) http.HandlerFunc {
 			return
 		}
 
-		if !queue.ScheduleWork(strconv.Itoa(jobDetails.Seconds)) {
+		scheduled := queue.ScheduleWork(r.URL.Query().Get("id"), strconv.Itoa(jobDetails.Seconds), messageChan)
+
+		if !scheduled {
 			messageChan <- "Error: Could not queue job."
 			w.WriteHeader(http.StatusBadRequest)
 			if err != nil {
